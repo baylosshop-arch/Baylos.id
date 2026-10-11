@@ -2026,60 +2026,71 @@ function showRegistrationSuccess(){
 }
 
 
-function handleLogin(event) {
-
+    async function handleLogin(event) {
     event.preventDefault();
 
     const email = $("#loginEmail").value.trim().toLowerCase();
-
     const password = $("#loginPassword").value;
-
-    const remember = $("#rememberMe").checked;
-
-    const registeredUsers = JSON.parse(localStorage.getItem("baylosUsers") || "[]");
-    const user = [...BAYLOS_CONFIG.demoUsers, ...registeredUsers].find(
-        item => item.email === email && item.password === password
-    );
-
     const errorBox = $("#loginError");
-
-    if (!user) {
-        errorBox.textContent = "Email atau password tidak sesuai.";
-        errorBox.classList.remove("hidden");
-        return;
-    }
-
-    if (user.role === "reseller" && user.status && user.status !== "approved") {
-        errorBox.textContent = user.status === "suspended" ? "Akun reseller Anda sedang ditangguhkan oleh admin." : "Akun Anda masih PENDING REVIEW. Tunggu persetujuan admin Baylos.";
-        errorBox.classList.remove("hidden");
-        return;
-    }
 
     errorBox.classList.add("hidden");
 
-    currentUser = {
-        email: user.email,
-        role: user.role,
-        name: user.name,
-        tier: user.tier
-    };
-
-    currentTier = user.tier;
-
-    if (remember) {
-
-        localStorage.setItem(
-            "baylosSession",
-            JSON.stringify(currentUser)
-        );
-
-    } else {
-
-        sessionStorage.setItem(
-            "baylosSession",
-            JSON.stringify(currentUser)
-        );
+    if (!window.BaylosAPI?.ready) {
+        errorBox.textContent = "Koneksi Supabase belum siap.";
+        errorBox.classList.remove("hidden");
+        return;
     }
+
+    try {
+        // Login menggunakan Supabase Auth
+        const result = await window.BaylosAPI.signIn(
+            email,
+            password
+        );
+
+        if (!result.user) {
+            throw new Error("Login gagal.");
+        }
+
+        // Ambil profil asli dari database
+        const profile = await window.BaylosAPI.profile();
+
+        if (!profile) {
+            throw new Error(
+                "Profil pengguna belum tersedia. Hubungi admin."
+            );
+        }
+
+        // Hak akses berasal dari database, bukan localStorage
+        currentUser = {
+            id: result.user.id,
+            email: result.user.email,
+            name: profile.full_name || result.user.email,
+            role: profile.user_role || "customer",
+            reseller_status: profile.reseller_status || "none",
+            tier: "silver"
+        };
+
+        currentTier = "silver";
+
+        // Hapus sesi demo lama
+        localStorage.removeItem("baylosSession");
+        sessionStorage.removeItem("baylosSession");
+
+        showApplication();
+
+        showToast(
+            `Selamat datang, ${currentUser.name}.`,
+            "success"
+        );
+
+    } catch (error) {
+        errorBox.textContent =
+            error.message || "Email atau password tidak sesuai.";
+
+        errorBox.classList.remove("hidden");
+    }
+        }
 
     showApplication();
 
