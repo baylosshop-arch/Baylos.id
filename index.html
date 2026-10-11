@@ -2121,30 +2121,41 @@ function showApplication() {
 }
 
 
-function logout() {
+async function logout() {
+    try {
+        if (window.BaylosAPI?.ready) {
+            await window.BaylosAPI.signOut();
+        }
 
-    currentUser = null;
+        currentUser = null;
+        currentTier = "gold";
 
-    localStorage.removeItem("baylosSession");
+        localStorage.removeItem("baylosSession");
+        sessionStorage.removeItem("baylosSession");
 
-    sessionStorage.removeItem("baylosSession");
+        $("#app").classList.add("hidden");
+        $("#adminOverlay").classList.add("hidden");
+        $("#loginScreen").classList.remove("hidden");
 
-    $("#app").classList.add("hidden");
+        $("#loginEmail").value = "";
+        $("#loginPassword").value = "";
 
-    $("#adminOverlay").classList.add("hidden");
+        $("#loginError").classList.add("hidden");
+        $("#userMenu").classList.add("hidden");
 
-    $("#loginScreen").classList.remove("hidden");
+        showToast(
+            "Anda berhasil keluar dari akun Baylos.",
+            "success"
+        );
 
-    $("#loginEmail").value = "";
-
-    $("#loginPassword").value = "";
-
-    $("#loginError").classList.add("hidden");
-
-    $("#userMenu").classList.add("hidden");
-
-    showToast("Anda telah keluar dari portal.", "info");
+    } catch (error) {
+        showToast(
+            "Gagal logout: " + error.message,
+            "error"
+        );
+    }
 }
+
 
 
 function updateUserUI() {
