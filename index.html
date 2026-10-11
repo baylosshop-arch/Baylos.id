@@ -508,20 +508,6 @@
                         <button type="button" onclick="openAuthModal('register')" class="btn-dark h-11 rounded-xl text-sm font-semibold">Daftar Reseller</button>
                         <button type="button" onclick="openAuthModal('forgot')" class="h-11 rounded-xl border border-white/10 text-sm font-semibold text-zinc-300 hover:border-gold/30 hover:text-gold">Reset Password</button>
                     </div>
-
-                    <div class="mt-7 pt-6 border-t border-white/5">
-                        <div class="text-[11px] text-zinc-600 leading-5">
-                            Demo reseller:
-                            <span class="text-zinc-400">reseller@baylos.id</span>
-                            /
-                            <span class="text-zinc-400">baylos123</span>
-                            <br>
-                            Demo admin:
-                            <span class="text-zinc-400">admin@baylos.id</span>
-                            /
-                            <span class="text-zinc-400">admin123</span>
-                        </div>
-                    </div>
                 </div>
 
                 <p class="text-center text-xs text-zinc-600 mt-7">
@@ -1628,22 +1614,7 @@ const BAYLOS_CONFIG = {
         }
     },
 
-    demoUsers: [
-        {
-            email: "reseller@baylos.id",
-            password: "baylos123",
-            role: "reseller",
-            name: "Baylos Partner",
-            tier: "gold"
-        },
-        {
-            email: "admin@baylos.id",
-            password: "admin123",
-            role: "admin",
-            name: "Baylos Administrator",
-            tier: "vip"
-        }
-    ]
+    demoUsers: []
 };
 
 
@@ -1996,6 +1967,7 @@ function initializeAuthentication() {
 
 localStorage.removeItem("baylosSession");
 sessionStorage.removeItem("baylosSession");
+localStorage.removeItem("baylosUsers");
 
 restoreSupabaseSession();
 
@@ -2034,10 +2006,19 @@ async function handleAuthModalSubmit(event) {
     const email = $("#authModalEmail").value.trim().toLowerCase();
 
     if (authModalMode === "forgot") {
-        showToast(
-            "Fitur reset password sedang disiapkan.",
-            "info"
-        );
+        if (!window.BaylosAPI?.ready) {
+            showToast("Koneksi Supabase belum siap.", "error");
+            return;
+        }
+        try {
+            await window.BaylosAPI.client.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname
+            });
+            closeAuthModal();
+            showToast("Jika email terdaftar, instruksi reset akan dikirim.", "success");
+        } catch (error) {
+            showToast(error.message || "Gagal meminta reset password.", "error");
+        }
         return;
     }
 
@@ -2188,14 +2169,6 @@ function showRegistrationSuccess(){
 
         errorBox.classList.remove("hidden");
     }
-        }
-
-    showApplication();
-
-    showToast(
-        `Selamat datang, ${user.name}.`,
-        "success"
-    );
 }
 
 
@@ -2211,7 +2184,7 @@ function showApplication() {
 
     setTier(currentTier, false);
 
-    if (currentUser && currentUser.role === "admin") {
+    if (currentUser && ["admin", "super_admin"].includes(currentUser.role)) {
         $("#adminButton").classList.remove("hidden");
     } else {
         $("#adminButton").classList.add("hidden");
@@ -3472,7 +3445,7 @@ function initializeUserMenu() {
 let authModalMode = 'register';
 function openAuthModal(mode){
   authModalMode=mode; const modal=$("#authModal"); modal.classList.remove('hidden');
-  const reg=mode==='register'; $("#authModalTitle").textContent=reg?'Daftar Reseller':'Reset Password'; $("#authModalDesc").textContent=reg?'Buat akun partner Baylos.':'Masukkan email untuk menerima instruksi reset password.'; $("#authModalSubmit").textContent=reg?'Daftar Reseller':'Kirim Instruksi Reset'; $("#registerFields").classList.toggle('hidden',!reg); $("#registerPasswordFields").classList.toggle('hidden',!reg); lucide.createIcons();
+  const reg=mode==='register'; $("#authModalTitle").textContent=reg?'Buat Akun':'Reset Password'; $("#authModalDesc").textContent=reg?'Buat akun pelanggan Baylos. Pengajuan reseller tersedia setelah verifikasi akun.':'Masukkan email untuk menerima instruksi reset password.'; $("#authModalSubmit").textContent=reg?'Buat Akun':'Kirim Instruksi Reset'; $("#registerFields").classList.toggle('hidden',!reg); $("#registerPasswordFields").classList.toggle('hidden',!reg); lucide.createIcons();
 }
 function closeAuthModal(){$("#authModal").classList.add('hidden');}
 function showResellerView(view){
@@ -3526,12 +3499,11 @@ function adminProductTableMarkup(list){
 function filterAdminProducts(){ const q=(document.querySelector('#adminProductSearch')?.value||'').toLowerCase(); const cat=document.querySelector('#adminProductCategory')?.value||'all'; const st=document.querySelector('#adminProductStatus')?.value||'all'; const list=products.filter(p=>(!q||`${p.name} ${p.sku}`.toLowerCase().includes(q))&&(cat==='all'||p.category===cat)&&(st==='all'||(st==='active'?p.active!==false:p.active===false))); const box=document.querySelector('#adminProductTableWrap'); if(box)box.innerHTML=adminProductTableMarkup(list); lucide.createIcons();}
 function toggleProductActive(id){ const p=products.find(x=>x.id===id); if(!p)return; p.active=p.active===false; persistProducts(); renderProducts(); showAdminSection('products'); showToast(p.active?'Produk dipublikasikan.':'Produk dinonaktifkan.','success'); }
 function adminResellersWorkspace(){
- const users=JSON.parse(localStorage.getItem('baylosUsers')||'[]'); const demo=BAYLOS_CONFIG.demoUsers.filter(u=>u.role==='reseller').map(u=>({...u,status:'approved',business:'Baylos Demo Partner',city:'Indonesia'})); const all=[...demo,...users];
- return `<div><div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4"><div><p class="text-gold text-[10px] uppercase tracking-[.2em] font-bold">Resellers</p><h2 class="font-display text-3xl mt-2">Daftar Reseller</h2><p class="text-sm text-zinc-500 mt-2">Approval, status, tier, dan informasi partner.</p></div></div><div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"><div class="rounded-2xl bg-card border border-white/5 p-5"><span class="text-xs text-zinc-500">All Resellers</span><p class="font-display text-3xl mt-3">${all.length}</p></div><div class="rounded-2xl bg-card border border-white/5 p-5"><span class="text-xs text-zinc-500">Pending Approval</span><p class="font-display text-3xl mt-3">${all.filter(u=>u.status==='pending').length}</p></div><div class="rounded-2xl bg-card border border-white/5 p-5"><span class="text-xs text-zinc-500">Active</span><p class="font-display text-3xl mt-3 text-green-400">${all.filter(u=>u.status==='approved').length}</p></div><div class="rounded-2xl bg-card border border-white/5 p-5"><span class="text-xs text-zinc-500">Suspended</span><p class="font-display text-3xl mt-3 text-red-300">${all.filter(u=>u.status==='suspended').length}</p></div></div><div class="rounded-2xl bg-card border border-white/5 overflow-x-auto"><table class="w-full min-w-[820px] text-left"><thead><tr class="text-[10px] uppercase tracking-wider text-zinc-600 border-b border-white/5"><th class="p-5">Partner</th><th class="p-5">Business</th><th class="p-5">Tier</th><th class="p-5">Status</th><th class="p-5">City</th><th class="p-5">Action</th></tr></thead><tbody>${all.map(u=>`<tr class="border-b border-white/5"><td class="p-5"><div class="font-semibold text-sm">${escapeHtml(u.name)}</div><div class="text-xs text-zinc-600 mt-1">${escapeHtml(u.email)}</div></td><td class="p-5 text-sm">${escapeHtml(u.business||'-')}</td><td class="p-5"><select onchange="updateResellerTier('${u.email}',this.value)" class="bg-obsidian border border-white/10 rounded-lg px-2 py-2 text-xs"><option value="silver" ${u.tier==='silver'?'selected':''}>Silver 20%</option><option value="gold" ${u.tier==='gold'?'selected':''}>Gold 30%</option><option value="vip" ${u.tier==='vip'?'selected':''}>VIP 40%</option></select></td><td class="p-5"><span class="text-xs ${u.status==='approved'?'text-green-400':u.status==='pending'?'text-yellow-400':'text-red-300'}">● ${u.status==='approved'?'APPROVED':u.status==='pending'?'PENDING':'SUSPENDED'}</span></td><td class="p-5 text-sm text-zinc-400">${escapeHtml(u.city||'-')}</td><td class="p-5"><div class="flex gap-2">${u.status!=='approved'?`<button onclick="setResellerStatus('${u.email}','approved')" class="text-xs text-green-400">Approve</button>`:''}${u.status!=='suspended'?`<button onclick="setResellerStatus('${u.email}','suspended')" class="text-xs text-red-300">Suspend</button>`:''}<button onclick="viewResellerDetail('${u.email}')" class="text-xs text-gold">Detail</button></div></td></tr>`).join('')}</tbody></table></div></div>`;
+ return `<div class="glass rounded-2xl p-6"><h3 class="text-xl font-semibold">Manajemen Reseller</h3><p class="text-sm text-zinc-400 mt-3">Modul reseller nyata belum dihubungkan ke backend admin yang aman. Tidak ada akun demo atau data simulasi yang ditampilkan.</p></div>`;
 }
-function updateResellerTier(email,tier){ const users=JSON.parse(localStorage.getItem('baylosUsers')||'[]'); const u=users.find(x=>x.email===email); if(u){u.tier=tier;localStorage.setItem('baylosUsers',JSON.stringify(users));showToast('Tier reseller diperbarui.','success');} }
-function setResellerStatus(email,status){ const users=JSON.parse(localStorage.getItem('baylosUsers')||'[]'); const u=users.find(x=>x.email===email); if(u){u.status=status;localStorage.setItem('baylosUsers',JSON.stringify(users));showAdminSection('resellers');showToast('Status reseller diperbarui.','success');} }
-function viewResellerDetail(email){ const users=JSON.parse(localStorage.getItem('baylosUsers')||'[]'); const u=users.find(x=>x.email===email)||BAYLOS_CONFIG.demoUsers.find(x=>x.email===email); if(!u)return; alert(`Partner: ${u.name}\nBusiness: ${u.business||'-'}\nEmail: ${u.email}\nWhatsApp: ${u.whatsapp||'-'}\nCity: ${u.city||'-'}\nSocial: ${u.social||'-'}\nTier: ${(u.tier||'silver').toUpperCase()}\nStatus: ${(u.status||'approved').toUpperCase()}`); }
+function updateResellerTier(email,tier){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
+function setResellerStatus(email,status){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
+function viewResellerDetail(email){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
 
 function adminOrdersWorkspace(){return `<div><div class="mb-6"><p class="text-gold text-[10px] uppercase tracking-[.2em] font-bold">Orders</p><h2 class="font-display text-3xl mt-2">Wholesale Orders</h2><p class="text-sm text-zinc-500 mt-2">New, Processing, Completed, dan Cancelled.</p></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6"><button class="rounded-xl bg-card border border-white/5 p-4 text-left"><b>New</b><div class="text-2xl font-display mt-2">18</div></button><button class="rounded-xl bg-card border border-white/5 p-4 text-left"><b>Processing</b><div class="text-2xl font-display mt-2">24</div></button><button class="rounded-xl bg-card border border-white/5 p-4 text-left"><b>Completed</b><div class="text-2xl font-display mt-2">286</div></button><button class="rounded-xl bg-card border border-white/5 p-4 text-left"><b>Cancelled</b><div class="text-2xl font-display mt-2">14</div></button></div><div class="rounded-2xl bg-card border border-white/5 p-5"><div class="flex justify-between items-center"><h3 class="font-semibold">Recent Orders</h3><button onclick="showToast('Order filter siap dihubungkan ke database.','info')" class="text-xs text-gold">Filter Status</button></div><div class="space-y-3 mt-5"><div class="p-4 rounded-xl bg-obsidian flex justify-between gap-3"><div><b>#BYL-1048</b><p class="text-xs text-zinc-500 mt-1">Nadia Boutique • 8 pcs</p></div><span class="text-yellow-400 text-xs">Processing</span></div><div class="p-4 rounded-xl bg-obsidian flex justify-between gap-3"><div><b>#BYL-1047</b><p class="text-xs text-zinc-500 mt-1">Maison Aira • 5 pcs</p></div><span class="text-green-400 text-xs">Completed</span></div></div></div></div>`}
 function adminSettingsWorkspace(){return `<div><div class="mb-6"><p class="text-gold text-[10px] uppercase tracking-[.2em] font-bold">System Settings</p><h2 class="font-display text-3xl mt-2">Settings</h2><p class="text-sm text-zinc-500 mt-2">Pengaturan operasional portal demo Baylos.</p></div><div class="grid lg:grid-cols-2 gap-5"><div class="rounded-2xl bg-card border border-white/5 p-5"><h3 class="font-semibold">Wholesale Configuration</h3><div class="space-y-4 mt-5"><label class="block"><span class="text-xs text-zinc-500">WhatsApp Admin</span><input value="088214822434" class="input-luxury h-11 px-4 text-sm mt-2" onchange="BAYLOS_CONFIG.whatsappAdminNumber=this.value.replace(/\D/g,'');showToast('Nomor WhatsApp diperbarui.','success')"></label><div class="grid grid-cols-3 gap-2"><div class="admin-chip rounded-xl p-3"><p class="text-[10px] text-zinc-500">Silver</p><b>20%</b></div><div class="admin-chip rounded-xl p-3"><p class="text-[10px] text-zinc-500">Gold</p><b>30%</b></div><div class="admin-chip rounded-xl p-3"><p class="text-[10px] text-zinc-500">VIP</p><b>40%</b></div></div></div></div><div class="rounded-2xl bg-card border border-white/5 p-5"><h3 class="font-semibold">Demo Data</h3><p class="text-xs text-zinc-500 mt-2">Data produk dan reseller versi demo tersimpan di browser perangkat ini.</p><button onclick="if(confirm('Reset produk ke data awal?')){localStorage.removeItem(PRODUCT_STORAGE_KEY);location.reload();}" class="btn-dark h-11 rounded-xl px-4 text-xs mt-5">Reset Product Data</button></div></div></div>`}
@@ -3635,7 +3607,7 @@ function openAdmin() {
 
     if (
         !currentUser ||
-        currentUser.role !== "admin"
+        !["admin", "super_admin"].includes(currentUser.role)
     ) {
 
         showToast(
