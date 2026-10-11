@@ -3887,12 +3887,46 @@ lucide.createIcons();
    <script src="web/baylos-supabase.js"></script>
 <script>
 window.addEventListener("load", function () {
-    console.log("BAYLOS SUPABASE DIAGNOSTIC", {
+    const status = {
         libraryLoaded: !!window.supabase?.createClient,
         configLoaded: !!window.BAYLOS_SUPABASE_CONFIG,
         apiLoaded: !!window.BaylosAPI,
         connectionReady: !!window.BaylosAPI?.ready
-    });
+    };
+
+    const box = document.createElement("div");
+
+    box.style.cssText = `
+        position:fixed;
+        bottom:15px;
+        left:10px;
+        right:10px;
+        background:#111827;
+        color:white;
+        padding:18px;
+        border:2px solid #d4af37;
+        border-radius:12px;
+        z-index:999999;
+        font-size:14px;
+        line-height:1.8;
+    `;
+
+    box.innerHTML = `
+        <strong>DIAGNOSTIK SUPABASE BAYLOS</strong><br>
+        Library: ${status.libraryLoaded}<br>
+        Config: ${status.configLoaded}<br>
+        API: ${status.apiLoaded}<br>
+        Ready: ${status.connectionReady}
+        <br><button id="closeDiagnostic"
+        style="background:#d4af37;color:black;padding:6px 16px">
+        Tutup
+        </button>
+    `;
+
+    document.body.appendChild(box);
+
+    document.getElementById("closeDiagnostic")
+        .addEventListener("click", () => box.remove());
 });
 </script>
     
