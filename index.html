@@ -3885,7 +3885,17 @@ lucide.createIcons();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
    <script src="web/baylos-supabase-config.js"></script>
    <script src="web/baylos-supabase.js"></script>
-
+<script>
+window.addEventListener("load", function () {
+    console.log("BAYLOS SUPABASE DIAGNOSTIC", {
+        libraryLoaded: !!window.supabase?.createClient,
+        configLoaded: !!window.BAYLOS_SUPABASE_CONFIG,
+        apiLoaded: !!window.BaylosAPI,
+        connectionReady: !!window.BaylosAPI?.ready
+    });
+});
+</script>
+    
 </body>
 </html>
 
