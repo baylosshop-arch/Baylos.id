@@ -1951,23 +1951,55 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ============================================================
    AUTHENTICATION
    ============================================================ */
+async function restoreSupabaseSession() {
+    if (!window.BaylosAPI?.ready) {
+        console.error("Supabase belum siap.");
+        return;
+    }
 
+    try {
+        const session = await window.BaylosAPI.session();
+
+        if (!session?.user) {
+            return;
+        }
+
+        const profile = await window.BaylosAPI.profile();
+
+        if (!profile) {
+            console.error("Profil pengguna tidak ditemukan.");
+            return;
+        }
+
+        currentUser = {
+            id: session.user.id,
+            email: session.user.email,
+            name: profile.full_name || session.user.email,
+            role: profile.user_role || "customer",
+            reseller_status: profile.reseller_status || "none",
+            tier: "silver"
+        };
+
+        currentTier = "silver";
+
+        showApplication();
+
+    } catch (error) {
+        console.error(
+            "Gagal memulihkan sesi Supabase:",
+            error
+        );
+    }
+} 
+    
 function initializeAuthentication() {
 
-    const savedSession = localStorage.getItem("baylosSession");
+localStorage.removeItem("baylosSession");
+sessionStorage.removeItem("baylosSession");
 
-    if (savedSession) {
-        try {
-            currentUser = JSON.parse(savedSession);
-
-            currentTier = currentUser.tier || "gold";
-
-            showApplication();
-
-        } catch (error) {
-            localStorage.removeItem("baylosSession");
-        }
-    }
+restoreSupabaseSession();
+     }
+ }
 
     $("#loginForm").addEventListener("submit", handleLogin);
     $("#authModalForm").addEventListener("submit", handleAuthModalSubmit);
