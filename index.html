@@ -1997,25 +1997,92 @@ function initializeAuthentication() {
 
 
 
-function handleAuthModalSubmit(event){
- event.preventDefault();
- const email=$("#authModalEmail").value.trim().toLowerCase();
- if(authModalMode==='forgot'){closeAuthModal();showToast('Instruksi reset password demo telah dikirim ke '+email+'.','success');return;}
- const name=$("#registerName").value.trim();
- const business=$("#registerBusiness").value.trim();
- const whatsapp=$("#registerWhatsapp").value.trim();
- const city=$("#registerCity").value.trim();
- const social=$("#registerSocial").value.trim();
- const password=$("#authModalPassword").value;
- const confirm=$("#authModalPasswordConfirm").value;
- if(!name||!business||!whatsapp||!city||!email||!password||!confirm){showToast('Lengkapi semua data pendaftaran.','warning');return;}
- if(password.length<6){showToast('Password minimal 6 karakter.','warning');return;}
- if(password!==confirm){showToast('Konfirmasi password tidak sama.','warning');return;}
- if(!$("#registerTerms").checked){showToast('Anda harus menyetujui Partner Terms.','warning');return;}
- const users=JSON.parse(localStorage.getItem('baylosUsers')||'[]');
- if(users.some(u=>u.email===email)||BAYLOS_CONFIG.demoUsers.some(u=>u.email===email)){showToast('Email sudah terdaftar.','warning');return;}
- const user={id:'RS-'+Date.now(),email,password,role:'reseller',name,business,whatsapp,city,social,tier:'silver',status:'pending',createdAt:new Date().toISOString()};
- users.push(user); localStorage.setItem('baylosUsers',JSON.stringify(users)); closeAuthModal(); showRegistrationSuccess();
+async function handleAuthModalSubmit(event) {
+    event.preventDefault();
+
+    const email = $("#authModalEmail").value.trim().toLowerCase();
+
+    if (authModalMode === "forgot") {
+        showToast(
+            "Fitur reset password sedang disiapkan.",
+            "info"
+        );
+        return;
+    }
+
+    const name = $("#registerName").value.trim();
+    const business = $("#registerBusiness").value.trim();
+    const whatsapp = $("#registerWhatsapp").value.trim();
+    const city = $("#registerCity").value.trim();
+    const social = $("#registerSocial").value.trim();
+    const password = $("#authModalPassword").value;
+    const confirm = $("#authModalPasswordConfirm").value;
+
+    if (!name || !business || !whatsapp ||
+        !city || !email || !password || !confirm) {
+        showToast(
+            "Lengkapi semua data pendaftaran.",
+            "warning"
+        );
+        return;
+    }
+
+    if (password.length < 8) {
+        showToast(
+            "Password minimal 8 karakter.",
+            "warning"
+        );
+        return;
+    }
+
+    if (password !== confirm) {
+        showToast(
+            "Konfirmasi password tidak sama.",
+            "warning"
+        );
+        return;
+    }
+
+    if (!$("#registerTerms").checked) {
+        showToast(
+            "Anda harus menyetujui Partner Terms.",
+            "warning"
+        );
+        return;
+    }
+
+    if (!window.BaylosAPI?.ready) {
+        showToast(
+            "Koneksi Supabase belum siap.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        const result = await window.BaylosAPI.signUp(
+            email,
+            password,
+            name
+        );
+
+        if (!result.user) {
+            throw new Error("Pendaftaran gagal.");
+        }
+
+        closeAuthModal();
+
+        showToast(
+            "Pendaftaran diterima. Periksa email untuk konfirmasi akun.",
+            "success"
+        );
+
+    } catch (error) {
+        showToast(
+            error.message || "Pendaftaran gagal.",
+            "error"
+        );
+    }
 }
 
 function showRegistrationSuccess(){
