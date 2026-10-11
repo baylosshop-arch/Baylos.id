@@ -3,3 +3,4 @@
 window.BAYLOS_SUPABASE_CONFIG = {
   url: 'https://ccphrevwfqociahucqye.supabase.co',
   publishableKey: 'sb_publishable_oRTQeEbCXMWz-yhHRl6_uQ_bKUmkYjs'
+};
