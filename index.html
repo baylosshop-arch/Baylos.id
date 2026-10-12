@@ -4187,9 +4187,54 @@ async function syncBaylosProductCatalog() {
     const success = await loadBaylosProductsFromSupabase();
 
     if (!success) {
-        console.warn("Sinkronisasi produk gagal.");
+        console.warn("Sinkronisasi gagal. Data lama tidak diubah.");
         return;
     }
+
+    const databaseProducts = window.BaylosDatabaseProducts || [];
+
+    // Simpan salinan produk lokal untuk keperluan migrasi.
+    if (!window.BaylosLegacyProducts) {
+        window.BaylosLegacyProducts = products
+            .filter(p => p.source !== "supabase")
+            .map(p => ({ ...p }));
+    }
+
+    // Produk Supabase menjadi satu-satunya sumber katalog.
+    products.splice(
+        0,
+        products.length,
+        ...databaseProducts
+    );
+
+    renderProducts();
+
+    // Perbarui menu Produk jika sedang terbuka.
+    const adminOverlay = document.getElementById("adminOverlay");
+    const workspace = document.getElementById("adminWorkspace");
+
+    if (
+        adminOverlay &&
+        !adminOverlay.classList.contains("hidden") &&
+        workspace &&
+        !workspace.classList.contains("hidden")
+    ) {
+        const activeNav = document.querySelector(".admin-nav.active");
+
+        if (
+            activeNav &&
+            activeNav.textContent.trim().toLowerCase() === "produk"
+        ) {
+            showAdminSection("products");
+        }
+    }
+
+    console.log(
+        "Katalog Supabase aktif:",
+        databaseProducts.length,
+        "produk."
+    );
+}
 
     const databaseProducts = window.BaylosDatabaseProducts || [];
 
