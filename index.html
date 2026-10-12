@@ -4409,6 +4409,33 @@ function openBaylosProductDetail(productId) {
     }
 
     showImage(0);
+    // BAYLOS PRODUCT DETAIL - TOUCH SWIPE
+
+let detailTouchStartX = 0;
+let detailTouchStartY = 0;
+
+imageElement.addEventListener("touchstart", (event) => {
+    detailTouchStartX = event.changedTouches[0].clientX;
+    detailTouchStartY = event.changedTouches[0].clientY;
+}, { passive: true });
+
+imageElement.addEventListener("touchend", (event) => {
+    if (images.length <= 1) return;
+
+    const deltaX =
+        event.changedTouches[0].clientX - detailTouchStartX;
+
+    const deltaY =
+        event.changedTouches[0].clientY - detailTouchStartY;
+
+    // Hindari mengganti gambar saat pengguna menggulir halaman.
+    if (
+        Math.abs(deltaX) > 50 &&
+        Math.abs(deltaX) > Math.abs(deltaY)
+    ) {
+        showImage(currentImage + (deltaX < 0 ? 1 : -1));
+    }
+}, { passive: true });
 
     modal.querySelector("#baylosDetailBack").onclick = () => {
         modal.remove();
