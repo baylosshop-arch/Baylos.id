@@ -2417,6 +2417,37 @@ if (images.length === 0) {
     let index=0; const imgs=[...slides.querySelectorAll('img')], counter=article.querySelector('[data-photo-counter]'), dots=[...article.querySelectorAll('[data-dot]')];
     const showImage=n=>{index=(n+images.length)%images.length;imgs.forEach((img,i)=>{img.classList.toggle('opacity-100',i===index);img.classList.toggle('opacity-0',i!==index)});counter.textContent=`${index+1} / ${images.length}`;dots.forEach((d,i)=>{d.classList.toggle('bg-gold',i===index);d.classList.toggle('bg-white/40',i!==index);d.classList.toggle('w-5',i===index);d.classList.toggle('w-1.5',i!==index)})};
     article.querySelector('[data-carousel="prev"]').addEventListener('click',e=>{e.stopPropagation();showImage(index-1)}); article.querySelector('[data-carousel="next"]').addEventListener('click',e=>{e.stopPropagation();showImage(index+1)}); dots.forEach(d=>d.addEventListener('click',e=>{e.stopPropagation();showImage(Number(d.dataset.dot))}));
+    // BAYLOS PRODUCT DETAIL
+// Klik gambar atau nama produk untuk membuka detail.
+
+const productTitle = article.querySelector("h3");
+
+if (productTitle) {
+    productTitle.style.cursor = "pointer";
+    productTitle.setAttribute("role", "button");
+    productTitle.setAttribute("tabindex", "0");
+
+    productTitle.addEventListener("click", () => {
+        openBaylosProductDetail(product.id);
+    });
+
+    productTitle.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openBaylosProductDetail(product.id);
+        }
+    });
+}
+
+const productSlides = article.querySelector(".product-slides");
+
+if (productSlides) {
+    productSlides.style.cursor = "pointer";
+
+    productSlides.addEventListener("click", () => {
+        openBaylosProductDetail(product.id);
+    });
+}
     let touchStartX=0; media.addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].clientX},{passive:true}); media.addEventListener('touchend',e=>{const delta=e.changedTouches[0].clientX-touchStartX;if(Math.abs(delta)>40)showImage(index+(delta<0?1:-1))},{passive:true});
     article.querySelectorAll('button[data-action]').forEach(button=>button.addEventListener('click',()=>{const selectedProduct=products.find(item=>item.id===button.dataset.productId);if(!selectedProduct)return;if(button.dataset.action==='media')openMediaModal(selectedProduct);else openOrderDrawer(selectedProduct)})); return article;
 }
