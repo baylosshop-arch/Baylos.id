@@ -4256,6 +4256,152 @@ window.addEventListener("load", () => {
     syncBaylosProductCatalog();
 });
 </script>
+    <script>
+function openBaylosProductDetail(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const images = (
+        Array.isArray(product.images) && product.images.length
+            ? product.images
+            : [product.image]
+    ).filter(Boolean);
+
+    if (!images.length) {
+        images.push("https://placehold.co/600x800?text=Baylos");
+    }
+
+    let modal = document.getElementById("baylosProductDetail");
+
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "baylosProductDetail";
+        modal.className =
+            "fixed inset-0 z-[9999] bg-[#101014] overflow-y-auto";
+        document.body.appendChild(modal);
+    }
+
+    const safeName = escapeHTML(product.name || "");
+    const safeCategory = escapeHTML(product.category || "");
+    const safeDescription = escapeHTML(product.caption || "");
+    const price = Number(product.msrp || 0);
+    const resellerPrice = calculateWholesalePrice(price);
+
+    let currentImage = 0;
+
+    modal.innerHTML = `
+        <div class="max-w-3xl mx-auto min-h-screen text-white">
+            <div class="sticky top-0 z-20 bg-[#101014]/95 border-b border-white/10 p-4 flex items-center justify-between">
+                <button id="baylosDetailBack"
+                    class="text-sm px-4 py-2 rounded-xl bg-white/10">
+                    ← Kembali
+                </button>
+                <span class="font-semibold text-[#d4af37]">
+                    BAYLOS
+                </span>
+            </div>
+
+            <div class="relative bg-black">
+                <img id="baylosDetailImage"
+                    class="w-full aspect-square object-contain"
+                    alt="${safeName}">
+
+                <button id="baylosDetailPrev"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/70 rounded-full p-3">
+                    ❮
+                </button>
+
+                <button id="baylosDetailNext"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/70 rounded-full p-3">
+                    ❯
+                </button>
+
+                <div id="baylosDetailCounter"
+                    class="absolute bottom-3 right-3 bg-black/70 px-3 py-1 rounded-lg text-xs">
+                </div>
+            </div>
+
+            <div class="p-5 space-y-5">
+                <div>
+                    <p class="text-[#d4af37] text-xs uppercase">
+                        ${safeCategory}
+                    </p>
+                    <h1 class="text-2xl font-semibold mt-2">
+                        ${safeName}
+                    </h1>
+                </div>
+
+                <div class="rounded-2xl bg-white/5 p-5 space-y-3">
+                    <p class="text-sm text-zinc-400">
+                        Harga Retail
+                    </p>
+                    <p class="text-xl font-semibold">
+                        ${formatRupiah(price)}
+                    </p>
+
+                    <p class="text-sm text-[#d4af37]">
+                        Harga Reseller
+                    </p>
+                    <p class="text-2xl font-bold text-[#d4af37]">
+                        ${formatRupiah(resellerPrice)}
+                    </p>
+
+                    <p class="text-sm text-zinc-400">
+                        Stok tersedia: ${Number(product.stock || 0)}
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="font-semibold text-lg mb-2">
+                        Deskripsi Produk
+                    </h2>
+                    <p class="text-sm text-zinc-400 whitespace-pre-line">
+                        ${safeDescription || "Belum ada deskripsi produk."}
+                    </p>
+                </div>
+
+                <button id="baylosDetailOrder"
+                    class="w-full bg-[#d4af37] text-black font-bold py-4 rounded-xl">
+                    + Order Grosir
+                </button>
+            </div>
+        </div>
+    `;
+
+    const imageElement = modal.querySelector("#baylosDetailImage");
+    const counter = modal.querySelector("#baylosDetailCounter");
+
+    function showImage(index) {
+        currentImage = (index + images.length) % images.length;
+        imageElement.src = images[currentImage];
+        counter.textContent = `${currentImage + 1} / ${images.length}`;
+    }
+
+    showImage(0);
+
+    modal.querySelector("#baylosDetailBack").onclick = () => {
+        modal.remove();
+    };
+
+    modal.querySelector("#baylosDetailPrev").onclick = () => {
+        showImage(currentImage - 1);
+    };
+
+    modal.querySelector("#baylosDetailNext").onclick = () => {
+        showImage(currentImage + 1);
+    };
+
+    modal.querySelector("#baylosDetailOrder").onclick = () => {
+        modal.remove();
+        openOrderDrawer(product);
+    };
+
+    if (images.length <= 1) {
+        modal.querySelector("#baylosDetailPrev").hidden = true;
+        modal.querySelector("#baylosDetailNext").hidden = true;
+    }
+}
+</script>
 </body>
 </html>
 
