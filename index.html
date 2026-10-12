@@ -511,7 +511,7 @@
                 </div>
 
                 <p class="text-center text-xs text-zinc-600 mt-7">
-                    © 2026 Baylos. Wholesale Partner Portal.
+                    © 2023 Baylos. Wholesale Partner Portal.
                 </p>
             </div>
         </div>
@@ -4184,8 +4184,8 @@ async function loadBaylosProductsFromSupabase() {
         const { data, error } = await api.client
             .from("products")
             .select(
-                "id,name,slug,description,category,image_url,retail_price,stock,is_active"
-            )
+    "id,name,slug,description,category,image_url,images,retail_price,stock,is_active"
+)
             .order("created_at", { ascending: false });
 
         if (error) {
@@ -4202,10 +4202,12 @@ async function loadBaylosProductsFromSupabase() {
             msrp: Number(product.retail_price || 0),
             stock: Number(product.stock || 0),
             active: product.is_active === true,
-            image: product.image_url || "",
-            images: product.image_url
-                ? [product.image_url]
-                : [],
+            image: product.image_url || product.images?.[0] || "",
+images: Array.isArray(product.images) && product.images.length > 0
+    ? product.images.filter(Boolean)
+    : product.image_url
+        ? [product.image_url]
+        : [],
             caption: product.description || "",
             source: "supabase"
         }));
