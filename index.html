@@ -1317,8 +1317,10 @@
                             <span class="text-xs text-zinc-500">Active Resellers</span>
                             <i data-lucide="users" class="w-4 h-4 text-gold"></i>
                         </div>
-                        <p class="font-display text-3xl mt-5">128</p>
-                        <p class="text-xs text-green-400 mt-2">+12 bulan ini</p>
+                        <p class="font-display text-3xl mt-5">
+    <span id="statResellers">—</span>
+</p>
+                        <p class="text-xs text-green-400 mt-2">Data Supabase</p>
                     </div>
 
                     <div class="rounded-2xl bg-card border border-white/5 p-5">
@@ -1326,8 +1328,10 @@
                             <span class="text-xs text-zinc-500">Orders</span>
                             <i data-lucide="shopping-bag" class="w-4 h-4 text-gold"></i>
                         </div>
-                        <p class="font-display text-3xl mt-5">342</p>
-                        <p class="text-xs text-green-400 mt-2">+8.4% minggu ini</p>
+                        <p class="font-display text-3xl mt-5">
+    <span id="statOrders">—</span>
+</p>
+                        <p class="text-xs text-green-400 mt-2">Data Supabase</p>
                     </div>
 
                     <div class="rounded-2xl bg-card border border-white/5 p-5">
@@ -1335,8 +1339,8 @@
                             <span class="text-xs text-zinc-500">Wholesale GMV</span>
                             <i data-lucide="wallet" class="w-4 h-4 text-gold"></i>
                         </div>
-                        <p class="font-display text-2xl mt-5">Rp184,2 Jt</p>
-                        <p class="text-xs text-green-400 mt-2">+14.8% bulan ini</p>
+                        <p class="font-display text-2xl mt-5"><span id="statGMV">—</span></p>
+                        <p class="text-xs text-green-400 mt-2">Data Supabase</p>
                     </div>
 
                     <div class="rounded-2xl bg-card border border-white/5 p-5">
@@ -1344,7 +1348,7 @@
                             <span class="text-xs text-zinc-500">Low Stock</span>
                             <i data-lucide="triangle-alert" class="w-4 h-4 text-yellow-400"></i>
                         </div>
-                        <p class="font-display text-3xl mt-5">7</p>
+                        <p class="font-display text-3xl mt-5"><span id="statLowStock">—</span></p>
                         <p class="text-xs text-yellow-400 mt-2">Perlu perhatian</p>
                     </div>
                 </div>
@@ -3929,7 +3933,65 @@ window.addEventListener("load", function () {
         .addEventListener("click", () => box.remove());
 });
 </script>
-    
+    <script>
+async function loadBaylosAdminStats() {
+    const api = window.BaylosAPI;
+
+    if (!api?.ready || !api.client) {
+        console.error("Supabase belum siap");
+        return;
+    }
+
+    const setStat = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    try {
+        // Pastikan pengguna adalah admin.
+        const profile = await api.profile();
+
+        if (profile?.user_role !== "admin") {
+            throw new Error("Akses statistik hanya untuk admin");
+        }
+
+        // Ambil statistik langsung dari Supabase.
+        const { data, error } = await api.client.rpc(
+            "baylos_admin_stats"
+        );
+
+        if (error) throw error;
+
+        setStat("statResellers", data.active_resellers);
+        setStat("statOrders", data.orders);
+        setStat("statLowStock", data.low_stock);
+
+        // Belum ada pesanan dan perhitungan GMV belum diaktifkan.
+        setStat("statGMV", "Belum tersedia");
+
+        console.log("Statistik admin berhasil dimuat");
+
+    } catch (error) {
+        console.error("Gagal memuat statistik:", error);
+
+        setStat("statResellers", "Error");
+        setStat("statOrders", "Error");
+        setStat("statGMV", "Error");
+        setStat("statLowStock", "Error");
+    }
+}
+
+// Muat statistik saat dashboard admin dibuka.
+const originalOpenAdmin = window.openAdmin;
+
+window.openAdmin = function (...args) {
+    if (typeof originalOpenAdmin === "function") {
+        originalOpenAdmin.apply(this, args);
+    }
+
+    loadBaylosAdminStats();
+};
+    </script>
 </body>
 </html>
 
