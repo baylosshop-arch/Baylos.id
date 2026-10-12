@@ -1226,7 +1226,7 @@
     id="adminOverlay"
     class="hidden fixed inset-0 z-[90] bg-obsidian overflow-y-auto"
 >
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex w-full min-w-0">
 
         <aside class="hidden md:flex w-64 admin-sidebar border-r border-white/5 flex-col">
             <div class="p-6 border-b border-white/5">
@@ -1280,7 +1280,7 @@
             </div>
         </aside>
 
-        <main class="flex-1">
+        <main class="flex-1 min-w-0 w-full overflow-x-hidden">
 
             <header class="h-[72px] border-b border-white/5 px-5 sm:px-8 flex items-center justify-between">
                 <div>
@@ -1299,7 +1299,7 @@
                 </button>
             </header>
 
-            <div class="admin-mobile-nav">
+            <div class="admin-mobile-nav max-w-full overflow-x-auto">             
                 <button onclick="showAdminSection('dashboard')" class="btn-dark h-9 px-3 rounded-lg text-xs">Dashboard</button>
                 <button onclick="showAdminSection('products')" class="btn-dark h-9 px-3 rounded-lg text-xs">Produk</button>
                 <button onclick="showAdminSection('resellers')" class="btn-dark h-9 px-3 rounded-lg text-xs">Reseller</button>
@@ -1308,8 +1308,8 @@
                 <button onclick="showAdminSection('settings')" class="btn-dark h-9 px-3 rounded-lg text-xs">Settings</button>
             </div>
 
-            <div id="adminDashboardView" class="p-5 sm:p-8 workspace-panel">
-
+            <div id="adminDashboardView" class="p-4 sm:p-8 workspace-panel min-w-0">
+                
                 <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                     <div class="rounded-2xl bg-card border border-white/5 p-5">
