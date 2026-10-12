@@ -4182,6 +4182,56 @@ async function loadBaylosProductsFromSupabase() {
     }
 }
 </script>
+    <script>
+async function syncBaylosProductCatalog() {
+    const success = await loadBaylosProductsFromSupabase();
+
+    if (!success) {
+        console.warn("Sinkronisasi produk gagal.");
+        return;
+    }
+
+    const databaseProducts = window.BaylosDatabaseProducts || [];
+
+    // Produk database menjadi sumber utama.
+    // Produk lokal lama tetap dipertahankan sebagai cadangan
+    // selama proses migrasi.
+    const databaseIds = new Set(databaseProducts.map(p => p.id));
+
+    const localProducts = products.filter(
+        p => !databaseIds.has(p.id)
+    );
+
+    products.splice(
+        0,
+        products.length,
+        ...databaseProducts,
+        ...localProducts
+    );
+
+    renderProducts();
+
+    const adminOverlay = document.getElementById("adminOverlay");
+
+    if (adminOverlay && !adminOverlay.classList.contains("hidden")) {
+        const workspace = document.getElementById("adminWorkspace");
+
+        if (workspace && !workspace.classList.contains("hidden")) {
+            showAdminSection("products");
+        }
+    }
+
+    console.log(
+        "Sinkronisasi katalog selesai:",
+        databaseProducts.length,
+        "produk database."
+    );
+}
+
+window.addEventListener("load", () => {
+    syncBaylosProductCatalog();
+});
+</script>
 </body>
 </html>
 
