@@ -4436,6 +4436,13 @@ imageElement.addEventListener("touchend", (event) => {
         showImage(currentImage + (deltaX < 0 ? 1 : -1));
     }
 }, { passive: true });
+    // BAYLOS PRODUCT IMAGE ZOOM
+
+imageElement.style.cursor = "zoom-in";
+
+imageElement.addEventListener("click", () => {
+    openBaylosImageZoom(imageElement.src);
+});
 
     modal.querySelector("#baylosDetailBack").onclick = () => {
         modal.remove();
@@ -4458,6 +4465,98 @@ imageElement.addEventListener("touchend", (event) => {
         modal.querySelector("#baylosDetailPrev").hidden = true;
         modal.querySelector("#baylosDetailNext").hidden = true;
     }
+}
+</script>
+    <script>
+function openBaylosImageZoom(imageUrl) {
+    const existing = document.getElementById("baylosImageZoom");
+
+    if (existing) {
+        existing.remove();
+    }
+
+    const overlay = document.createElement("div");
+
+    overlay.id = "baylosImageZoom";
+    overlay.className =
+        "fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden";
+
+    overlay.innerHTML = `
+        <button
+            id="baylosZoomClose"
+            type="button"
+            aria-label="Tutup gambar"
+            class="absolute top-5 right-5 z-20 bg-white/20 text-white rounded-full w-12 h-12 text-2xl"
+        >
+            ×
+        </button>
+
+        <img
+            id="baylosZoomImage"
+            alt="Foto produk diperbesar"
+            class="max-w-full max-h-full object-contain select-none"
+            draggable="false"
+            style="touch-action:none; transform-origin:center center;"
+        >
+    `;
+
+    document.body.appendChild(overlay);
+
+    const img = overlay.querySelector("#baylosZoomImage");
+
+    img.src = imageUrl;
+
+    let scale = 1;
+    let startDistance = 0;
+    let startScale = 1;
+
+    function updateZoom() {
+        img.style.transform = `scale(${scale})`;
+    }
+
+    function getDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+
+        return Math.hypot(dx, dy);
+    }
+
+    img.addEventListener("touchstart", (event) => {
+        if (event.touches.length === 2) {
+            startDistance = getDistance(event.touches);
+            startScale = scale;
+        }
+    }, { passive: false });
+
+    img.addEventListener("touchmove", (event) => {
+        if (event.touches.length === 2 && startDistance > 0) {
+            event.preventDefault();
+
+            const distance = getDistance(event.touches);
+
+            scale = Math.min(
+                4,
+                Math.max(1, startScale * distance / startDistance)
+            );
+
+            updateZoom();
+        }
+    }, { passive: false });
+
+    img.addEventListener("touchend", (event) => {
+        if (event.touches.length < 2) {
+            startDistance = 0;
+        }
+    });
+
+    img.addEventListener("dblclick", () => {
+        scale = scale > 1 ? 1 : 2;
+        updateZoom();
+    });
+
+    overlay.querySelector("#baylosZoomClose").onclick = () => {
+        overlay.remove();
+    };
 }
 </script>
 </body>
