@@ -3585,18 +3585,78 @@ function renderEditorColors(){
   const box=$("#editorColors");
   box.innerHTML=editorColors.map((c,i)=>`<div class="rounded-xl border border-white/5 p-3 grid grid-cols-[1fr_repeat(4,70px)_36px] gap-2 items-end overflow-x-auto"><label class="min-w-[130px]"><span class="text-[10px] text-zinc-600">Warna</span><input value="${escapeAttribute(c.name)}" oninput="editorColors[${i}].name=this.value" class="input-luxury h-10 px-3 text-xs mt-1 w-full"></label>${['S','M','L','XL'].map(size=>`<label class="min-w-[60px]"><span class="text-[10px] text-zinc-600">${size}</span><input type="number" min="0" value="${c.stock?.[size]||0}" oninput="editorColors[${i}].stock.${size}=Math.max(0,parseInt(this.value||0,10))" class="input-luxury h-10 px-2 text-xs mt-1 w-full text-center"></label>`).join('')}<button type="button" onclick="removeEditorColor(${i})" class="w-9 h-10 rounded-lg bg-red-500/10 text-red-300">×</button></div>`).join('');
 }
-function saveProductFromEditor(event){
-  event.preventDefault();
-  if(editorPhotos.length<3){showToast("Minimal 3 foto wajib untuk produk.","warning");return;}
-  const id=$("#editorProductId").value||$("#editorSku").value.trim();
-  const duplicate=products.find(p=>p.sku.toLowerCase()===$("#editorSku").value.trim().toLowerCase() && p.id!==id); if(duplicate){showToast("SKU sudah digunakan produk lain.","warning");return;}
-  const data={id,sku:$("#editorSku").value.trim(),name:$("#editorName").value.trim(),category:$("#editorCategory").value,msrp:Number($("#editorMsrp").value)||0,stock:Number($("#editorStock").value)||0,active:$("#editorActive").value==='true',images:editorPhotos.map(x=>x.src),image:editorPhotos[0].src,video:$("#editorVideo").value.trim(),caption:$("#editorCaption").value.trim(),colors:JSON.parse(JSON.stringify(editorColors))};
-  const idx=products.findIndex(p=>p.id===id); if(idx>=0) products[idx]=Object.assign({},products[idx],data); else products.push(data);
-  persistProducts(); closeProductEditor(); renderProducts();
-  if(!$("#adminOverlay").classList.contains("hidden")){showAdminSection('products');}
-  showToast(idx>=0?"Produk berhasil diperbarui.":"Produk baru berhasil ditambahkan.","success");
-}
+async function saveProductFromEditor(event) {
+    event.preventDefault();
 
+    const saveButton = event.submitter;
+
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
+
+    try {
+        const name = document.getElementById("editorName").value.trim();
+        const price = Number(document.getElementById("editorMsrp").value);
+        const stock = Number(document.getElementById("editorStock").value);
+        const existingId = document.getElementById("editorProductId").value.trim();
+
+        if (!name) {
+            throw new Error("Nama produk wajib diisi.");
+        }
+
+        if (!Number.isFinite(price) || price < 0) {
+            throw new Error("Harga produk tidak valid.");
+        }
+
+        if (!Number.isInteger(stock) || stock < 0) {
+            throw new Error("Stok produk harus berupa bilangan bulat positif.");
+        }
+
+        const product = {
+            name: name,
+            category: document.getElementById("editorCategory").value,
+            retail_price: price,
+            stock: stock,
+            is_active: document.getElementById("editorActive").value === "true",
+            description: document.getElementById("editorCaption").value.trim(),
+            image_url: editorPhotos.length > 0
+                ? editorPhotos[0].src
+                : null
+        };
+
+        // Hanya gunakan UUID database untuk memperbarui produk.
+        if (existingId && /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(existingId)) {
+            product.id = existingId;
+        } else if (existingId) {
+            throw new Error(
+                "Produk lokal lama belum terhubung ke database. " +
+                "Jangan menimpanya sebelum migrasi data."
+            );
+        }
+
+        await saveBaylosProductToSupabase(product);
+
+        closeProductEditor();
+
+        showToast(
+            "Produk berhasil disimpan ke Supabase.",
+            "success"
+        );
+
+    } catch (error) {
+        console.error("Gagal menyimpan produk:", error);
+
+        showToast(
+            error.message || "Gagal menyimpan produk.",
+            "warning"
+        );
+
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+        }
+    }
+}
 /* ============================================================
    ADMIN
    ============================================================ */
