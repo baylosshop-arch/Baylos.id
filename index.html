@@ -4126,6 +4126,62 @@ async function saveBaylosProductToSupabase(product) {
     return true;
 }
 </script>
+    <script>
+async function loadBaylosProductsFromSupabase() {
+    const api = window.BaylosAPI;
+
+    if (!api?.ready || !api.client) {
+        console.error("Supabase belum siap.");
+        return false;
+    }
+
+    try {
+        const { data, error } = await api.client
+            .from("products")
+            .select(
+                "id,name,slug,description,category,image_url,retail_price,stock,is_active"
+            )
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            throw error;
+        }
+
+        // Simpan hasil pembacaan secara terpisah.
+        // Jangan menghapus produk lokal sebelum migrasi selesai.
+        window.BaylosDatabaseProducts = (data || []).map(product => ({
+            id: product.id,
+            sku: product.slug || product.id,
+            name: product.name,
+            category: product.category || "",
+            msrp: Number(product.retail_price || 0),
+            stock: Number(product.stock || 0),
+            active: product.is_active === true,
+            image: product.image_url || "",
+            images: product.image_url
+                ? [product.image_url]
+                : [],
+            caption: product.description || "",
+            source: "supabase"
+        }));
+
+        console.log(
+            "Produk Supabase berhasil dibaca:",
+            window.BaylosDatabaseProducts.length
+        );
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            "Gagal membaca produk Supabase:",
+            error
+        );
+
+        return false;
+    }
+}
+</script>
 </body>
 </html>
 
