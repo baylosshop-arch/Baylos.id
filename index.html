@@ -3736,17 +3736,19 @@ async function saveProductFromEditor(event) {
             throw new Error("Stok produk harus berupa bilangan bulat positif.");
         }
 
-        const product = {
-            const uploadedImages = await uploadBaylosEditorPhotos();
-            name: name,
-            category: document.getElementById("editorCategory").value,
-            retail_price: price,
-            stock: stock,
-            is_active: document.getElementById("editorActive").value === "true",
-            description: document.getElementById("editorCaption").value.trim(),
-            image_url: uploadedImages[0] || null,
-images: uploadedImages
-        };
+        const uploadedImages = await uploadBaylosEditorPhotos();
+
+const product = {
+    name: name,
+    category: document.getElementById("editorCategory").value,
+    retail_price: price,
+    stock: stock,
+    is_active: document.getElementById("editorActive").value === "true",
+    description: document.getElementById("editorCaption").value.trim(),
+    image_url: uploadedImages[0] || null,
+    images: uploadedImages
+};
+            
 
         // Hanya gunakan UUID database untuk memperbarui produk.
         if (existingId && /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(existingId)) {
