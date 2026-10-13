@@ -3637,7 +3637,34 @@ function adminResellersWorkspace() {
             ].join("\n");
 
             card.append(name, details);
-            container.appendChild(card);
+
+if (reseller.reseller_status === "pending") {
+    const actions = document.createElement("div");
+    actions.className = "flex flex-wrap gap-3 mt-4";
+
+    const approveButton = document.createElement("button");
+    approveButton.type = "button";
+    approveButton.className =
+        "btn-gold rounded-xl px-4 py-2 text-sm font-semibold";
+    approveButton.textContent = "Setujui Reseller";
+
+    const rejectButton = document.createElement("button");
+    rejectButton.type = "button";
+    rejectButton.className =
+        "btn-dark rounded-xl px-4 py-2 text-sm";
+    rejectButton.textContent = "Tolak Pengajuan";
+
+    approveButton.onclick = () =>
+        reviewBaylosReseller(reseller.id, "approved");
+
+    rejectButton.onclick = () =>
+        reviewBaylosReseller(reseller.id, "rejected");
+
+    actions.append(approveButton, rejectButton);
+    card.appendChild(actions);
+}
+
+container.appendChild(card);
         });
 
     } catch (error) {
@@ -3648,6 +3675,60 @@ function adminResellersWorkspace() {
             (error.message || "Kesalahan tidak diketahui");
     }
     }
+    async function reviewBaylosReseller(userId, status) {
+    const action =
+        status === "approved" ? "menyetujui" : "menolak";
+
+    if (!["approved", "rejected"].includes(status)) {
+        showToast("Status reseller tidak valid.", "error");
+        return;
+    }
+
+    if (!confirm(`Yakin ingin ${action} pengajuan reseller ini?`)) {
+        return;
+    }
+
+    try {
+        const api = window.BaylosAPI;
+
+        if (!api?.ready) {
+            throw new Error("Supabase belum terhubung.");
+        }
+
+        const profile = await api.profile();
+
+        if (profile?.user_role !== "admin") {
+            throw new Error("Hanya admin yang dapat memproses reseller.");
+        }
+
+        const { error } = await api.client.rpc(
+            "baylos_admin_review_reseller",
+            {
+                p_user_id: userId,
+                p_status: status
+            }
+        );
+
+        if (error) throw error;
+
+        showToast(
+            status === "approved"
+                ? "Reseller berhasil disetujui."
+                : "Pengajuan reseller ditolak.",
+            "success"
+        );
+
+        await loadBaylosAdminResellers();
+
+    } catch (error) {
+        console.error("Gagal memproses reseller:", error);
+
+        showToast(
+            error.message || "Gagal memperbarui status reseller.",
+            "error"
+        );
+    }
+}
 function updateResellerTier(email,tier){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
 function setResellerStatus(email,status){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
 function viewResellerDetail(email){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
