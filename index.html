@@ -1557,6 +1557,83 @@
 </div>
 
 <!-- PROFILE MODAL -->
+    <!-- FORMULIR PENGAJUAN RESELLER BAYLOS -->
+<div id="baylosResellerApplicationModal"
+     class="hidden fixed inset-0 z-[150] modal-backdrop p-4 overflow-y-auto">
+
+    <div class="min-h-full flex items-center justify-center py-6">
+
+        <div class="w-full max-w-xl glass rounded-3xl p-6">
+
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold">
+                    Pengajuan Reseller Baylos
+                </h2>
+
+                <button type="button"
+                        onclick="closeBaylosResellerApplication()">
+                    ✕
+                </button>
+            </div>
+
+            <form onsubmit="submitBaylosResellerApplication(event)"
+                  class="space-y-4">
+
+                <input name="business_name"
+                       placeholder="Nama Usaha / Toko"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="phone"
+                       type="tel"
+                       placeholder="Nomor WhatsApp Aktif"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="province"
+                       placeholder="Provinsi"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="regency"
+                       placeholder="Kabupaten / Kota"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="district"
+                       placeholder="Kecamatan"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="village"
+                       placeholder="Kelurahan / Desa"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <textarea name="street_address"
+                          placeholder="Nama Jalan, Nomor Rumah, RT/RW"
+                          class="input-luxury w-full p-3"
+                          rows="3"
+                          required></textarea>
+
+                <input name="postal_code"
+                       placeholder="Kode Pos"
+                       class="input-luxury w-full p-3"
+                       required>
+
+                <input name="social_media"
+                       placeholder="Media Sosial (Opsional)"
+                       class="input-luxury w-full p-3">
+
+                <button type="submit"
+                        class="btn-gold w-full p-3 rounded-xl font-bold">
+                    Kirim Pengajuan Reseller
+                </button>
+
+            </form>
+        </div>
+    </div>
+</div>
 <div id="profileModal" class="hidden fixed inset-0 z-[140] modal-backdrop p-4 overflow-y-auto">
  <div class="min-h-full flex items-center justify-center"><div class="w-full max-w-lg glass rounded-3xl p-6 sm:p-8 relative"><button onclick="closeProfileModal()" class="absolute right-5 top-5 w-9 h-9 rounded-xl btn-dark flex items-center justify-center"><i data-lucide="x" class="w-4 h-4"></i></button><p class="text-gold text-[10px] uppercase tracking-[.2em] font-bold">Partner Profile</p><h2 class="font-display text-3xl mt-2">Profil Reseller</h2><div class="space-y-4 mt-7"><div><label class="text-xs text-zinc-500">Nama</label><input id="profileName" class="input-luxury h-12 px-4 text-sm mt-2"></div><div><label class="text-xs text-zinc-500">Email</label><input id="profileEmail" disabled class="input-luxury h-12 px-4 text-sm mt-2 opacity-60"></div><div><label class="text-xs text-zinc-500">Tier</label><select id="profileTier" class="input-luxury h-12 px-4 text-sm mt-2"><option value="silver">Silver — 20%</option><option value="gold">Gold — 30%</option><option value="vip">VIP — 40%</option></select></div><button onclick="saveProfile()" class="btn-gold w-full h-12 rounded-xl font-bold">Simpan Profil</button></div></div></div>
 </div>
