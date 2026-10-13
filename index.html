@@ -3762,7 +3762,9 @@ const product = {
 
         await saveBaylosProductToSupabase(product);
 
-        closeProductEditor();
+await syncBaylosProductCatalog();
+
+closeProductEditor();
 
         showToast(
             "Produk berhasil disimpan ke Supabase.",
