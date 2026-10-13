@@ -1959,6 +1959,8 @@ async function restoreSupabaseSession() {
 
         showApplication();
 
+await submitPendingBaylosResellerApplication();
+
     } catch (error) {
         console.error(
             "Gagal memulihkan sesi Supabase:",
@@ -2119,7 +2121,62 @@ function showRegistrationSuccess(){
   box.innerHTML=`<div class="glass rounded-3xl p-7 max-w-md w-full text-center shadow-luxury"><div class="w-14 h-14 mx-auto rounded-2xl bg-yellow-500/10 flex items-center justify-center"><i data-lucide="clock-3" class="w-7 h-7 text-yellow-400"></i></div><p class="text-gold text-[10px] uppercase tracking-[.2em] font-bold mt-5">Registration Submitted</p><h2 class="font-display text-3xl mt-2">Become a Baylos Partner</h2><p class="text-sm text-zinc-400 mt-4 leading-6">Terima kasih telah mendaftar sebagai Baylos Reseller Partner.<br>Account kamu sedang menunggu persetujuan admin.</p><div class="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-4"><div class="text-xs text-zinc-500">Status</div><div class="mt-1 text-yellow-400 font-bold">● PENDING REVIEW</div></div><button onclick="document.getElementById('registrationSuccess').remove()" class="btn-gold w-full h-12 rounded-xl font-bold mt-5">Kembali ke Login</button></div>`; document.body.appendChild(box); lucide.createIcons();
 }
 
+    async function submitPendingBaylosResellerApplication() {
+    const key = "baylosPendingResellerApplication";
+    const saved = sessionStorage.getItem(key);
 
+    if (!saved || !window.BaylosAPI?.ready) return;
+
+    let application;
+
+    try {
+        application = JSON.parse(saved);
+    } catch {
+        sessionStorage.removeItem(key);
+        return;
+    }
+
+    const api = window.BaylosAPI;
+    const { data: { user }, error: userError } =
+        await api.client.auth.getUser();
+
+    if (userError || !user) return;
+
+    // Pastikan pengajuan milik akun yang sedang login.
+    if (application.userId !== user.id) return;
+
+    const { error } = await api.client.rpc(
+        "baylos_apply_reseller",
+        {
+            p_business_name: application.business,
+            p_phone: application.whatsapp,
+            p_city: application.city,
+            p_social_media: application.social || null
+        }
+    );
+
+    if (error) {
+        console.error("Gagal mengirim pengajuan reseller:", error);
+        showToast(
+            "Pengajuan reseller belum terkirim: " + error.message,
+            "warning"
+        );
+        return;
+    }
+
+    sessionStorage.removeItem(key);
+
+    const profile = await api.profile();
+
+    if (currentUser && profile) {
+        currentUser.reseller_status = profile.reseller_status;
+    }
+
+    showToast(
+        "Pengajuan reseller berhasil dikirim. Menunggu persetujuan admin.",
+        "success"
+    );
+}
     async function handleLogin(event) {
     event.preventDefault();
 
@@ -2173,10 +2230,12 @@ function showRegistrationSuccess(){
 
         showApplication();
 
-        showToast(
-            `Selamat datang, ${currentUser.name}.`,
-            "success"
-        );
+await submitPendingBaylosResellerApplication();
+
+showToast(
+    `Selamat datang, ${currentUser.name}.`,
+    "success"
+);
 
     } catch (error) {
         errorBox.textContent =
