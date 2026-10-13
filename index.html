@@ -4137,7 +4137,10 @@ async function saveBaylosProductToSupabase(product) {
         retail_price: price,
         stock,
         image_url: product.image_url || null,
-        is_active: product.is_active === true
+images: Array.isArray(product.images)
+    ? product.images
+    : [],
+is_active: product.is_active === true
     };
 
     let query;
