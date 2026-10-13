@@ -2100,110 +2100,151 @@ restoreSupabaseSession();
 async function handleAuthModalSubmit(event) {
     event.preventDefault();
 
-    const email = $("#authModalEmail").value.trim().toLowerCase();
+    const email = document.getElementById("authModalEmail")
+        .value.trim().toLowerCase();
 
-    if (authModalMode === "forgot") {
-        if (!window.BaylosAPI?.ready) {
-            showToast("Koneksi Supabase belum siap.", "error");
-            return;
-        }
-        try {
-            await window.BaylosAPI.client.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + window.location.pathname
-            });
-            closeAuthModal();
-            showToast("Jika email terdaftar, instruksi reset akan dikirim.", "success");
-        } catch (error) {
-            showToast(error.message || "Gagal meminta reset password.", "error");
-        }
+    const api = window.BaylosAPI;
+
+    if (!api?.ready) {
+        showToast("Koneksi Supabase belum siap.", "error");
         return;
     }
 
-    const name = $("#registerName").value.trim();
-    const business = $("#registerBusiness").value.trim();
-    const whatsapp = $("#registerWhatsapp").value.trim();
-    const city = $("#registerCity").value.trim();
-    const social = $("#registerSocial").value.trim();
-    const password = $("#authModalPassword").value;
-    const confirm = $("#authModalPasswordConfirm").value;
+    if (authModalMode === "forgot") {
+        try {
+            const { error } =
+                await api.client.auth.resetPasswordForEmail(email, {
+                    redirectTo:
+                        window.location.origin +
+                        window.location.pathname
+                });
 
-    if (!name || !business || !whatsapp ||
-        !city || !email || !password || !confirm) {
+            if (error) throw error;
+
+            closeAuthModal();
+
+            showToast(
+                "Jika email terdaftar, instruksi reset akan dikirim.",
+                "success"
+            );
+        } catch (error) {
+            showToast(error.message || "Reset password gagal.", "error");
+        }
+
+        return;
+    }
+
+    const isReseller = authModalMode === "reseller";
+    const isCustomer = authModalMode === "customer";
+
+    if (!isReseller && !isCustomer) {
+        showToast("Jenis pendaftaran tidak valid.", "error");
+        return;
+    }
+
+    const name = document.getElementById("registerName")
+        .value.trim();
+
+    const password = document.getElementById("authModalPassword")
+        .value;
+
+    const confirm = document.getElementById(
+        "authModalPasswordConfirm"
+    ).value;
+
+    const business = document.getElementById("registerBusiness")
+        .value.trim();
+
+    const whatsapp = document.getElementById("registerWhatsapp")
+        .value.trim();
+
+    const city = document.getElementById("registerCity")
+        .value.trim();
+
+    const social = document.getElementById("registerSocial")
+        .value.trim();
+
+    if (!name || !email || !password || !confirm) {
+        showToast("Lengkapi data pendaftaran.", "warning");
+        return;
+    }
+
+    if (isReseller && (!business || !whatsapp || !city)) {
         showToast(
-            "Lengkapi semua data pendaftaran.",
+            "Lengkapi nama usaha, WhatsApp, dan kota.",
             "warning"
         );
         return;
     }
 
     if (password.length < 8) {
-        showToast(
-            "Password minimal 8 karakter.",
-            "warning"
-        );
+        showToast("Password minimal 8 karakter.", "warning");
         return;
     }
 
     if (password !== confirm) {
-        showToast(
-            "Konfirmasi password tidak sama.",
-            "warning"
-        );
+        showToast("Konfirmasi password tidak sama.", "warning");
         return;
     }
 
-    if (!$("#registerTerms").checked) {
-        showToast(
-            "Anda harus menyetujui Partner Terms.",
-            "warning"
-        );
+    if (!document.getElementById("registerTerms").checked) {
+        showToast("Anda harus menyetujui ketentuan Baylos.", "warning");
         return;
     }
 
-    if (!window.BaylosAPI?.ready) {
-        showToast(
-            "Koneksi Supabase belum siap.",
-            "error"
-        );
-        return;
-    }
+    const submitButton = document.getElementById("authModalSubmit");
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Memproses pendaftaran...";
 
     try {
-        const result = await window.BaylosAPI.signUp(
-            email,
-            password,
-            name
-        );
+        const result = await api.signUp(email, password, name);
 
-        if (!result.user) {
-    throw new Error("Pendaftaran gagal.");
-}
+        if (!result?.user) {
+            throw new Error("Pendaftaran gagal.");
+        }
 
-sessionStorage.setItem(
-    "baylosPendingResellerApplication",
-    JSON.stringify({
-        userId: result.user.id,
-        business: business,
-        whatsapp: whatsapp,
-        city: city,
-        social: social
-    })
-);
+        if (isReseller) {
+            sessionStorage.setItem(
+                "baylosPendingResellerApplication",
+                JSON.stringify({
+                    userId: result.user.id,
+                    business,
+                    whatsapp,
+                    city,
+                    social
+                })
+            );
+        } else {
+            sessionStorage.removeItem(
+                "baylosPendingResellerApplication"
+            );
+        }
 
-closeAuthModal();
+        closeAuthModal();
 
         showToast(
-            "Pendaftaran diterima. Periksa email untuk konfirmasi akun.",
+            "Akun berhasil didaftarkan. Periksa email untuk verifikasi, lalu login.",
             "success"
         );
 
     } catch (error) {
+        console.error("Pendaftaran Baylos gagal:", error);
+
         showToast(
             error.message || "Pendaftaran gagal.",
             "error"
         );
+
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent =
+            isReseller
+                ? "Buat Akun Reseller"
+                : "Buat Akun Pelanggan";
     }
 }
+            
 
 function showRegistrationSuccess(){
   const existing=document.getElementById('registrationSuccess');
