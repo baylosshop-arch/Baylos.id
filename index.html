@@ -3744,9 +3744,8 @@ async function saveProductFromEditor(event) {
             stock: stock,
             is_active: document.getElementById("editorActive").value === "true",
             description: document.getElementById("editorCaption").value.trim(),
-            image_url: editorPhotos.length > 0
-                ? editorPhotos[0].src
-                : null
+            image_url: uploadedImages[0] || null,
+images: uploadedImages
         };
 
         // Hanya gunakan UUID database untuk memperbarui produk.
