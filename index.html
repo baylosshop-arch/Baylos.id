@@ -3547,9 +3547,107 @@ function adminProductTableMarkup(list){
 }
 function filterAdminProducts(){ const q=(document.querySelector('#adminProductSearch')?.value||'').toLowerCase(); const cat=document.querySelector('#adminProductCategory')?.value||'all'; const st=document.querySelector('#adminProductStatus')?.value||'all'; const list=products.filter(p=>(!q||`${p.name} ${p.sku}`.toLowerCase().includes(q))&&(cat==='all'||p.category===cat)&&(st==='all'||(st==='active'?p.active!==false:p.active===false))); const box=document.querySelector('#adminProductTableWrap'); if(box)box.innerHTML=adminProductTableMarkup(list); lucide.createIcons();}
 function toggleProductActive(id){ const p=products.find(x=>x.id===id); if(!p)return; p.active=p.active===false; persistProducts(); renderProducts(); showAdminSection('products'); showToast(p.active?'Produk dipublikasikan.':'Produk dinonaktifkan.','success'); }
-function adminResellersWorkspace(){
- return `<div class="glass rounded-2xl p-6"><h3 class="text-xl font-semibold">Manajemen Reseller</h3><p class="text-sm text-zinc-400 mt-3">Modul reseller nyata belum dihubungkan ke backend admin yang aman. Tidak ada akun demo atau data simulasi yang ditampilkan.</p></div>`;
+function adminResellersWorkspace() {
+    setTimeout(loadBaylosAdminResellers, 0);
+
+    return `
+        <div class="glass rounded-2xl p-6">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-xl font-semibold">
+                        Manajemen Reseller
+                    </h3>
+                    <p class="text-sm text-zinc-400 mt-2">
+                        Data pengajuan reseller dari Supabase.
+                    </p>
+                </div>
+
+                <button
+                    onclick="loadBaylosAdminResellers()"
+                    class="btn-dark rounded-xl px-4 py-2 text-sm">
+                    Refresh
+                </button>
+            </div>
+
+            <div id="baylosResellerList" class="mt-6">
+                <p class="text-zinc-400 text-sm">
+                    Memuat data reseller...
+                </p>
+            </div>
+        </div>
+    `;
 }
+    async function loadBaylosAdminResellers() {
+    const container = document.getElementById(
+        "baylosResellerList"
+    );
+
+    if (!container) return;
+
+    container.textContent = "Memuat data reseller...";
+
+    try {
+        const api = window.BaylosAPI;
+
+        if (!api?.ready) {
+            throw new Error("Supabase belum terhubung.");
+        }
+
+        const profile = await api.profile();
+
+        if (profile?.user_role !== "admin") {
+            throw new Error("Akses khusus admin Baylos.");
+        }
+
+        const { data, error } = await api.client.rpc(
+            "baylos_admin_list_resellers"
+        );
+
+        if (error) throw error;
+
+        container.replaceChildren();
+
+        if (!data || data.length === 0) {
+            container.textContent =
+                "Belum ada pengajuan reseller.";
+            return;
+        }
+
+        data.forEach(reseller => {
+            const card = document.createElement("div");
+
+            card.className =
+                "rounded-xl border border-white/10 p-4 mb-3";
+
+            const name = document.createElement("h4");
+            name.className = "font-semibold";
+            name.textContent =
+                reseller.full_name || "Tanpa nama";
+
+            const details = document.createElement("p");
+            details.className =
+                "text-sm text-zinc-400 mt-2 whitespace-pre-line";
+
+            details.textContent = [
+                "Usaha: " + (reseller.business_name || "-"),
+                "WhatsApp: " + (reseller.phone || "-"),
+                "Kota: " + (reseller.city || "-"),
+                "Media sosial: " + (reseller.social_media || "-"),
+                "Status: " + reseller.reseller_status
+            ].join("\n");
+
+            card.append(name, details);
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Gagal memuat reseller:", error);
+
+        container.textContent =
+            "Gagal memuat reseller: " +
+            (error.message || "Kesalahan tidak diketahui");
+    }
+    }
 function updateResellerTier(email,tier){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
 function setResellerStatus(email,status){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
 function viewResellerDetail(email){ showToast('Fitur admin reseller menunggu backend yang aman.', 'warning'); }
