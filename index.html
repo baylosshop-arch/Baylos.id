@@ -2431,6 +2431,29 @@ function showApplication() {
     updateUserUI();
     updateDashboardStats();
     showResellerView("dashboard");
+    if (
+    currentUser?.role === "customer" &&
+    ["none", "rejected"].includes(currentUser.reseller_status)
+) {
+    let applyButton = document.getElementById(
+        "baylosApplyResellerButton"
+    );
+
+    if (!applyButton) {
+        applyButton = document.createElement("button");
+
+        applyButton.id = "baylosApplyResellerButton";
+        applyButton.className =
+            "btn-gold rounded-xl px-5 py-3 font-semibold m-4";
+
+        applyButton.textContent = "Ajukan Reseller Baylos";
+
+        applyButton.onclick = openBaylosResellerApplication;
+
+        document.getElementById("dashboardView")
+            ?.prepend(applyButton);
+    }
+}
 
     setTier(currentTier, false);
 
