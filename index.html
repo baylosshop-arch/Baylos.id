@@ -3737,6 +3737,7 @@ async function saveProductFromEditor(event) {
         }
 
         const product = {
+            const uploadedImages = await uploadBaylosEditorPhotos();
             name: name,
             category: document.getElementById("editorCategory").value,
             retail_price: price,
