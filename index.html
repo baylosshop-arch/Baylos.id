@@ -2245,7 +2245,106 @@ showToast(
     }
 }
 
+function openBaylosResellerApplication() {
+    if (!currentUser) {
+        showToast("Silakan login terlebih dahulu.", "warning");
+        return;
+    }
 
+    if (currentUser.role === "admin") {
+        showToast("Akun admin tidak memerlukan pengajuan reseller.", "warning");
+        return;
+    }
+
+    if (currentUser.reseller_status === "pending") {
+        showToast("Pengajuan Anda sedang menunggu persetujuan admin.", "warning");
+        return;
+    }
+
+    if (currentUser.reseller_status === "approved") {
+        showToast("Akun Anda sudah menjadi reseller.", "success");
+        return;
+    }
+
+    document.getElementById("baylosResellerApplicationModal")
+        ?.classList.remove("hidden");
+}
+
+function closeBaylosResellerApplication() {
+    document.getElementById("baylosResellerApplicationModal")
+        ?.classList.add("hidden");
+}
+
+async function submitBaylosResellerApplication(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+
+    if (button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "Mengirim pengajuan...";
+
+    try {
+        const api = window.BaylosAPI;
+
+        if (!api?.ready) {
+            throw new Error("Supabase belum terhubung.");
+        }
+
+        const fields = new FormData(form);
+
+        const params = {
+            p_business_name: fields.get("business_name")?.trim(),
+            p_phone: fields.get("phone")?.trim(),
+            p_city: fields.get("regency")?.trim(),
+            p_social_media: fields.get("social_media")?.trim() || "",
+            p_province: fields.get("province")?.trim(),
+            p_regency: fields.get("regency")?.trim(),
+            p_district: fields.get("district")?.trim(),
+            p_village: fields.get("village")?.trim(),
+            p_street_address: fields.get("street_address")?.trim(),
+            p_postal_code: fields.get("postal_code")?.trim()
+        };
+
+        const { error } = await api.client.rpc(
+            "baylos_apply_reseller",
+            params
+        );
+
+        if (error) throw error;
+
+        const profile = await api.profile();
+
+        if (currentUser && profile) {
+            currentUser.reseller_status = profile.reseller_status;
+        }
+
+        sessionStorage.removeItem(
+            "baylosPendingResellerApplication"
+        );
+
+        closeBaylosResellerApplication();
+
+        showToast(
+            "Pengajuan berhasil dikirim. Menunggu persetujuan admin.",
+            "success"
+        );
+
+    } catch (error) {
+        console.error("Pengajuan reseller gagal:", error);
+
+        showToast(
+            error.message || "Gagal mengirim pengajuan.",
+            "error"
+        );
+
+    } finally {
+        button.disabled = false;
+        button.textContent = "Kirim Pengajuan Reseller";
+    }
+}
 function showApplication() {
 
     $("#loginScreen").classList.add("hidden");
