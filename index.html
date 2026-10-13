@@ -3630,6 +3630,85 @@ function renderEditorColors(){
   const box=$("#editorColors");
   box.innerHTML=editorColors.map((c,i)=>`<div class="rounded-xl border border-white/5 p-3 grid grid-cols-[1fr_repeat(4,70px)_36px] gap-2 items-end overflow-x-auto"><label class="min-w-[130px]"><span class="text-[10px] text-zinc-600">Warna</span><input value="${escapeAttribute(c.name)}" oninput="editorColors[${i}].name=this.value" class="input-luxury h-10 px-3 text-xs mt-1 w-full"></label>${['S','M','L','XL'].map(size=>`<label class="min-w-[60px]"><span class="text-[10px] text-zinc-600">${size}</span><input type="number" min="0" value="${c.stock?.[size]||0}" oninput="editorColors[${i}].stock.${size}=Math.max(0,parseInt(this.value||0,10))" class="input-luxury h-10 px-2 text-xs mt-1 w-full text-center"></label>`).join('')}<button type="button" onclick="removeEditorColor(${i})" class="w-9 h-10 rounded-lg bg-red-500/10 text-red-300">×</button></div>`).join('');
 }
+// BAYLOS - UPLOAD FOTO OTOMATIS DARI ADMIN
+
+async function uploadBaylosEditorPhotos() {
+    const api = window.BaylosAPI;
+
+    if (!api?.ready || !api.client) {
+        throw new Error("Koneksi Supabase belum siap.");
+    }
+
+    const profile = await api.profile();
+
+    if (profile?.user_role !== "admin") {
+        throw new Error("Akses upload hanya untuk admin.");
+    }
+
+    const urls = [];
+
+    for (const photo of editorPhotos) {
+        const src = String(photo.src || "");
+
+        // Foto lama tetap dipertahankan.
+        if (src.startsWith("https://")) {
+            urls.push(src);
+            continue;
+        }
+
+        if (!src.startsWith("data:image/")) {
+            throw new Error("Format foto tidak valid.");
+        }
+
+        // Konversi foto preview menjadi file.
+        const response = await fetch(src);
+        const blob = await response.blob();
+
+        if (blob.size > 5 * 1024 * 1024) {
+            throw new Error("Ukuran foto maksimal 5 MB.");
+        }
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(blob.type)) {
+            throw new Error("Format foto tidak didukung.");
+        }
+
+        const extension = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp"
+        }[blob.type];
+
+        const filePath =
+            `products/${crypto.randomUUID()}.${extension}`;
+
+        const { error } = await api.client.storage
+            .from("product-images")
+            .upload(filePath, blob, {
+                contentType: blob.type,
+                upsert: false
+            });
+
+        if (error) {
+            throw new Error(
+                "Upload foto gagal: " + error.message
+            );
+        }
+
+        const { data } = api.client.storage
+            .from("product-images")
+            .getPublicUrl(filePath);
+
+        urls.push(data.publicUrl);
+    }
+
+    return urls;
+}    
 async function saveProductFromEditor(event) {
     event.preventDefault();
 
