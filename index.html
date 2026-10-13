@@ -2083,10 +2083,21 @@ async function handleAuthModalSubmit(event) {
         );
 
         if (!result.user) {
-            throw new Error("Pendaftaran gagal.");
-        }
+    throw new Error("Pendaftaran gagal.");
+}
 
-        closeAuthModal();
+sessionStorage.setItem(
+    "baylosPendingResellerApplication",
+    JSON.stringify({
+        userId: result.user.id,
+        business: business,
+        whatsapp: whatsapp,
+        city: city,
+        social: social
+    })
+);
+
+closeAuthModal();
 
         showToast(
             "Pendaftaran diterima. Periksa email untuk konfirmasi akun.",
