@@ -505,7 +505,21 @@
                     </form>
 
                     <div class="mt-5 grid grid-cols-2 gap-3">
-                        <button type="button" onclick="openAuthModal('register')" class="btn-dark h-11 rounded-xl text-sm font-semibold">Daftar Reseller</button>
+                        <div class="flex flex-col gap-3">
+    <button
+        type="button"
+        onclick="openAuthModal('customer')"
+        class="btn-gold h-11 rounded-xl text-sm font-semibold">
+        Daftar Pelanggan
+    </button>
+
+    <button
+        type="button"
+        onclick="openAuthModal('reseller')"
+        class="btn-dark h-11 rounded-xl text-sm font-semibold">
+        Daftar Reseller
+    </button>
+                        </div>
                         <button type="button" onclick="openAuthModal('forgot')" class="h-11 rounded-xl border border-white/10 text-sm font-semibold text-zinc-300 hover:border-gold/30 hover:text-gold">Reset Password</button>
                     </div>
                 </div>
@@ -3761,9 +3775,57 @@ function initializeUserMenu() {
    EXTENDED PORTAL WORKSPACES
    ============================================================ */
 let authModalMode = 'register';
-function openAuthModal(mode){
-  authModalMode=mode; const modal=$("#authModal"); modal.classList.remove('hidden');
-  const reg=mode==='register'; $("#authModalTitle").textContent=reg?'Buat Akun':'Reset Password'; $("#authModalDesc").textContent=reg?'Buat akun pelanggan Baylos. Pengajuan reseller tersedia setelah verifikasi akun.':'Masukkan email untuk menerima instruksi reset password.'; $("#authModalSubmit").textContent=reg?'Buat Akun':'Kirim Instruksi Reset'; $("#registerFields").classList.toggle('hidden',!reg); $("#registerPasswordFields").classList.toggle('hidden',!reg); lucide.createIcons();
+function openAuthModal(mode) {
+    authModalMode = mode;
+
+    const modal = document.getElementById("authModal");
+    const isCustomer = mode === "customer";
+    const isReseller = mode === "reseller";
+    const isRegister = isCustomer || isReseller;
+
+    modal.classList.remove("hidden");
+
+    document.getElementById("authModalTitle").textContent =
+        isCustomer ? "Daftar Pelanggan" :
+        isReseller ? "Daftar Reseller" :
+        "Reset Password";
+
+    document.getElementById("authModalDesc").textContent =
+        isCustomer
+            ? "Buat akun pelanggan Baylos untuk menyimpan riwayat pesanan."
+            : isReseller
+            ? "Buat akun terlebih dahulu, lalu ajukan reseller setelah login."
+            : "Masukkan email untuk menerima instruksi reset password.";
+
+    document.getElementById("authModalSubmit").textContent =
+        isCustomer ? "Buat Akun Pelanggan" :
+        isReseller ? "Buat Akun Reseller" :
+        "Kirim Instruksi Reset";
+
+    document.getElementById("registerFields")
+        .classList.toggle("hidden", !isReseller);
+
+    document.getElementById("registerPasswordFields")
+        .classList.toggle("hidden", !isRegister);
+
+    const nameField = document.getElementById("registerName");
+
+    if (nameField) {
+        nameField.required = isRegister;
+    }
+
+    ["registerBusiness", "registerWhatsapp", "registerCity"].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.required = isReseller;
+    });
+
+    const terms = document.getElementById("registerTerms");
+
+    if (terms) {
+        terms.required = isRegister;
+    }
+
+    lucide.createIcons();
 }
 function closeAuthModal(){$("#authModal").classList.add('hidden');}
 function showResellerView(view){
