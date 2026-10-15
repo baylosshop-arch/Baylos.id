@@ -15,7 +15,7 @@
   }
   async function signUp(email, password, fullName) {
     const { data, error } = await requireClient().auth.signUp({
-      email, password, options: { data: { full_name: fullName || '' } }
+      email, password, options: { emailRedirectTo: new URL('./index.html', window.location.href).href, data: { full_name: fullName || '' } }
     });
     if (error) throw new Error(errorText(error));
     return data;
