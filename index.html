@@ -504,6 +504,7 @@
                         </button>
                     </form>
 
+                    <a href="./toko.html" class="btn-gold h-12 rounded-xl text-sm font-bold flex items-center justify-center mb-3">🛍️ Belanja Tanpa Login — Lihat Katalog</a>
                     <div class="mt-5 grid grid-cols-2 gap-3">
                         <div class="flex flex-col gap-3">
     <button
@@ -2050,7 +2051,7 @@ async function restoreSupabaseSession() {
 
         showApplication();
 
-await submitPendingBaylosResellerApplication();
+// Pengajuan reseller wajib melalui formulir alamat lengkap; tidak dikirim otomatis.
 
     } catch (error) {
         console.error(
@@ -2204,22 +2205,9 @@ async function handleAuthModalSubmit(event) {
             throw new Error("Pendaftaran gagal.");
         }
 
-        if (isReseller) {
-            sessionStorage.setItem(
-                "baylosPendingResellerApplication",
-                JSON.stringify({
-                    userId: result.user.id,
-                    business,
-                    whatsapp,
-                    city,
-                    social
-                })
-            );
-        } else {
-            sessionStorage.removeItem(
-                "baylosPendingResellerApplication"
-            );
-        }
+        // Pendaftaran hanya membuat akun pelanggan. Calon reseller mengajukan
+        // permohonan resmi setelah login melalui formulir alamat lengkap.
+        sessionStorage.removeItem("baylosPendingResellerApplication");
 
         closeAuthModal();
 
@@ -2362,7 +2350,7 @@ function showRegistrationSuccess(){
 
         showApplication();
 
-await submitPendingBaylosResellerApplication();
+// Pengajuan reseller wajib melalui formulir alamat lengkap; tidak dikirim otomatis.
 
 showToast(
     `Selamat datang, ${currentUser.name}.`,

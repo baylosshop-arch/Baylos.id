@@ -1,0 +1,11 @@
+TAHAP 24 — KATALOG PUBLIK (VERSI AWAL)
+
+Ditambahkan: toko.html, dan tautan Belanja Tanpa Login pada halaman login.
+Katalog mengambil hanya produk aktif dan harga retail dari tabel products Supabase.
+Tidak ada produk demo atau data produk palsu di toko.html.
+
+BELUM SELESAI: keranjang publik, checkout tamu, ongkir otomatis, pembayaran, pesan, integrasi admin pesanan tamu. Jangan menganggap fitur tersebut aktif.
+
+UJI: unggah isi ZIP ke branch supabase-integration, buka /Baylos.id/toko.html; cek apakah produk aktif muncul. Bila gagal, audit kebijakan SELECT publik products (RLS), tanpa membuka tabel lain.
+
+Catatan: file ZIP diambil dari unggahan pengguna; perubahan GitHub yang dibuat setelah unduhan tidak otomatis termasuk. Jangan timpa commit baru tanpa membandingkan.
