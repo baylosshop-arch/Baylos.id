@@ -56,6 +56,18 @@
       .eq('id', variantId).eq('product_id', productId)
       .select('id,product_id,sku,size,color,stock').single());
   }
+  async function updateProductDetails(productId, details) {
+    const c = await admin();
+    if (!productId) throw new Error('ID produk wajib diisi.');
+    const name = String(details?.name ?? '').trim();
+    const category = String(details?.category ?? '').trim();
+    const description = String(details?.description ?? '').trim();
+    if (!name || name.length > 160) throw new Error('Nama produk wajib diisi (maksimal 160 karakter).');
+    if (category.length > 100) throw new Error('Kategori maksimal 100 karakter.');
+    if (description.length > 5000) throw new Error('Deskripsi maksimal 5.000 karakter.');
+    return unwrap(await c.from('products').update({name, category: category || null, description: description || null})
+      .eq('id', productId).select('id,name,category,description').single());
+  }
   async function setProductPrice(productId, price) {
     const c = await admin();
     if (!productId) throw new Error('ID produk wajib diisi.');
@@ -82,6 +94,6 @@
       .eq('id', productId).select('id,stock_verified').single());
   }
   window.BaylosAdminInventory = Object.freeze({
-    listProducts, listVariants, setProductStock, setVariantStock, setProductPrice, setPublished, setShippingWeight, setStockVerified
+    listProducts, listVariants, setProductStock, setVariantStock, updateProductDetails, setProductPrice, setPublished, setShippingWeight, setStockVerified
   });
 })();
