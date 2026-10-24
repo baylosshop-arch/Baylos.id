@@ -30,3 +30,7 @@ Paket pembaruan UI Baylos dengan tema obsidian/gold, katalog, pemilihan varian, 
 - `index.html` — UI storefront/checkout.
 - `supabase/` — audit SQL, migration shipment dan scaffold Edge Functions.
 - `SUPABASE-NEXT-STEPS-ID.md`, `BITESHIP-SETUP-ID.md`, `RELEASE-CHECKLIST.md` — panduan Bahasa Indonesia.
+
+
+## Tambahan Tahap 31
+Form admin mendukung galeri multi-foto (minimal 3, maksimal 10; JPG/PNG/WebP; 5 MB per foto) dengan pratinjau. Upload memerlukan Supabase Storage bucket dan policies admin yang benar. Produk baru tetap nonaktif sampai ditinjau. Lihat `TAHAP31-UPLOAD-MULTI-FOTO.md`.
